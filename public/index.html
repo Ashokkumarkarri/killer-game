@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplayer Imposter Game</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Multiplayer Imposter Game</h1>
+
+    <!-- Join Room UI -->
+    <div id="joinRoom" class="game-section">
+      <input type="text" id="playerName" placeholder="Enter your name">
+      <button id="joinBtn">Join Game</button>
+    </div>
+
+    <!-- Game Lobby UI -->
+    <div id="gameLobby" class="game-section" style="display: none;">
+      <h2>Players in the Lobby</h2>
+      <div id="playersList"></div>
+      <button id="startGameBtn">Start Game</button>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="chatSection" style="display:none;">
+      <h3>Chat</h3>
+      <div id="messages"></div>
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button id="sendMsgBtn">Send</button>
+    </div>
+
+    <!-- Voting Section -->
+    <div id="votingSection" style="display: none;">
+      <h3>Vote for the Imposter</h3>
+      <div id="voteButtons"></div>
+    </div>
+
+    <!-- Imposter Notification -->
+    <div id="imposterNotification" style="display: none;">
+      <h2>You are the Imposter!</h2>
+    </div>
+
+    <!-- Game Result -->
+    <div id="gameResult" style="display: none;">
+      <h2 id="resultMessage"></h2>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
