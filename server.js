@@ -1,101 +1,56 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
+const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = socketIo(server);
 
-let players = [];
-let imposter = null;
-let votes = {};
-let gameStarted = false;
-let votingTimeout;
-
-// Serve static files from the 'public' directory
 app.use(express.static('public'));
 
-io.on('connection', socket => {
-  console.log('A player connected: ', socket.id);
+const players = [];
+let gameStarted = false;
+let imposter = null;
 
-  // Join Room
-  socket.on('joinRoom', playerName => {
-    players.push({ id: socket.id, name: playerName });
-    io.emit('playersUpdate', players.map(p => p.name));
-    console.log(`${playerName} joined the room`);
+io.on('connection', (socket) => {
+  console.log('A user connected');
+  
+  // Handle new player joining
+  socket.on('addPlayer', (playerName) => {
+    if (players.length < 10 && !gameStarted) {
+      players.push({ name: playerName, id: socket.id });
+      io.emit('playerList', players);
+      console.log(`${playerName} added`);
+    }
   });
 
-  // Start Game
+  // Handle game start
   socket.on('startGame', () => {
     if (players.length > 1) {
-      if (gameStarted) return; // Prevent starting multiple games
       gameStarted = true;
-      imposter = players[Math.floor(Math.random() * players.length)];
-      io.to(imposter.id).emit('youAreImposter');
-      io.emit('startGame');
-      console.log('Game started. Imposter is:', imposter.name);
-      votes = {}; // Reset votes
-      startVotingTimeout();
-    } else {
-      socket.emit('errorMessage', 'At least 2 players are required to start the game.');
+      const randomIndex = Math.floor(Math.random() * players.length);
+      imposter = players[randomIndex].id;
+      io.emit('gameStarted', imposter);
     }
   });
 
-  // Handle Chat
-  socket.on('chatMessage', message => {
-    io.emit('chatMessage', message);
+  // Handle vote
+  socket.on('vote', (votedPlayerId) => {
+    io.emit('vote', votedPlayerId);
   });
 
-  // Handle Voting
-  socket.on('vote', votedPlayerName => {
-    if (gameStarted) {
-      if (!votes[votedPlayerName]) {
-        votes[votedPlayerName] = 1;
-      } else {
-        votes[votedPlayerName]++;
-      }
-      io.emit('votesUpdate', votes);
-    }
-  });
-
-  // Disconnect
+  // Handle disconnection
   socket.on('disconnect', () => {
-    players = players.filter(p => p.id !== socket.id);
-    io.emit('playersUpdate', players.map(p => p.name));
-    console.log('A player disconnected:', socket.id);
+    console.log('User disconnected');
+    const index = players.findIndex(player => player.id === socket.id);
+    if (index !== -1) {
+      players.splice(index, 1);
+      io.emit('playerList', players);
+    }
   });
 });
 
-function startVotingTimeout() {
-  clearTimeout(votingTimeout);
-  votingTimeout = setTimeout(() => {
-    endVoting();
-  }, 60000); // 60 seconds for voting
-}
-
-function endVoting() {
-  const maxVotes = Math.max(...Object.values(votes));
-  const votedPlayers = Object.keys(votes).filter(name => votes[name] === maxVotes);
-  if (votedPlayers.length === 1) {
-    const votedPlayer = votedPlayers[0];
-    if (players.find(p => p.name === votedPlayer) === imposter) {
-      io.emit('gameResult', { winner: 'imposter' });
-    } else {
-      io.emit('gameResult', { winner: 'innocent' });
-    }
-    resetGame();
-  } else {
-    io.emit('gameResult', { winner: 'continue' });
-  }
-}
-
-function resetGame() {
-  players = [];
-  imposter = null;
-  votes = {};
-  gameStarted = false;
-}
-
-server.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
