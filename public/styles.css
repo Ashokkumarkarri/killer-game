@@ -1,18 +1,63 @@
 body {
   font-family: Arial, sans-serif;
   text-align: center;
+  background-color: #f0f0f0;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+  color: #333;
 }
 
 #gameArea {
-  margin: 20px auto;
-  max-width: 600px;
-}
-
-#playerList {
   margin-top: 20px;
 }
 
-#gameStatus {
+#playerName {
+  padding: 10px;
+  font-size: 16px;
+  width: 60%;
+  max-width: 300px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+#playerList, #gameStatus, #voteSection {
   margin-top: 20px;
-  font-weight: bold;
+}
+
+#playerList p {
+  font-size: 18px;
+  color: #555;
+}
+
+#voteList button {
+  display: block;
+  margin: 5px auto;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+#voteList button:hover {
+  background-color: #0056b3;
 }

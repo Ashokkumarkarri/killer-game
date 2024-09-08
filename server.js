@@ -11,6 +11,7 @@ app.use(express.static('public'));
 const players = [];
 let gameStarted = false;
 let imposter = null;
+let votes = {};
 
 io.on('connection', (socket) => {
   console.log('A user connected');
@@ -36,7 +37,11 @@ io.on('connection', (socket) => {
 
   // Handle vote
   socket.on('vote', (votedPlayerId) => {
-    io.emit('vote', votedPlayerId);
+    if (!votes[votedPlayerId]) {
+      votes[votedPlayerId] = 0;
+    }
+    votes[votedPlayerId]++;
+    io.emit('vote', votes);
   });
 
   // Handle disconnection

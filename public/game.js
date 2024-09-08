@@ -21,13 +21,26 @@ socket.on('playerList', (players) => {
 
 socket.on('gameStarted', (imposterId) => {
     const gameStatusDiv = document.getElementById('gameStatus');
+    const voteSection = document.getElementById('voteSection');
     if (socket.id === imposterId) {
         gameStatusDiv.innerHTML = '<p>You are the imposter!</p>';
     } else {
         gameStatusDiv.innerHTML = '<p>The game has started. Discuss and vote!</p>';
+        voteSection.style.display = 'block';
     }
 });
 
-socket.on('vote', (votedPlayerId) => {
-    console.log(`Player voted: ${votedPlayerId}`);
+socket.on('vote', (votes) => {
+    const voteList = document.getElementById('voteList');
+    voteList.innerHTML = '';
+    const playerVotes = Object.entries(votes);
+    playerVotes.forEach(([playerId, voteCount]) => {
+        if (playerId !== socket.id) { // Exclude the current player from voting
+            voteList.innerHTML += `<button onclick="vote('${playerId}')">Vote for ${playerId} (${voteCount} votes)</button>`;
+        }
+    });
 });
+
+function vote(votedPlayerId) {
+    socket.emit('vote', votedPlayerId);
+}
