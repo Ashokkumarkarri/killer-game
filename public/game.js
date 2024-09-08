@@ -1,46 +1,54 @@
 const socket = io();
 
+// Add player
 document.getElementById('addPlayerButton').addEventListener('click', () => {
     const playerName = document.getElementById('playerName').value;
     if (playerName) {
         socket.emit('addPlayer', playerName);
+        document.getElementById('playerName').value = '';
     }
 });
 
+// Start game
 document.getElementById('startGameButton').addEventListener('click', () => {
     socket.emit('startGame');
 });
 
+// Update player list
 socket.on('playerList', (players) => {
-    const playerListDiv = document.getElementById('playerList');
-    playerListDiv.innerHTML = '<h2>Players:</h2>';
+    const playerListContainer = document.getElementById('playerListContainer');
+    playerListContainer.innerHTML = '';
     players.forEach(player => {
-        playerListDiv.innerHTML += `<p>${player.name}</p>`;
+        const p = document.createElement('p');
+        p.textContent = player.name;
+        playerListContainer.appendChild(p);
     });
 });
 
+// Start game UI
 socket.on('gameStarted', (imposterId) => {
-    const gameStatusDiv = document.getElementById('gameStatus');
-    const voteSection = document.getElementById('voteSection');
-    if (socket.id === imposterId) {
-        gameStatusDiv.innerHTML = '<p>You are the imposter!</p>';
-    } else {
-        gameStatusDiv.innerHTML = '<p>The game has started. Discuss and vote!</p>';
-        voteSection.style.display = 'block';
-    }
+    document.getElementById('gameStatus').textContent = 'Game started! Try to find the imposter!';
+    document.getElementById('voteSection').style.display = 'block';
+    document.getElementById('startGameButton').style.display = 'none';
 });
 
-socket.on('vote', (votes) => {
+// Update vote options
+socket.on('updateVotes', (players) => {
     const voteList = document.getElementById('voteList');
     voteList.innerHTML = '';
-    const playerVotes = Object.entries(votes);
-    playerVotes.forEach(([playerId, voteCount]) => {
-        if (playerId !== socket.id) { // Exclude the current player from voting
-            voteList.innerHTML += `<button onclick="vote('${playerId}')">Vote for ${playerId} (${voteCount} votes)</button>`;
-        }
+    players.forEach(player => {
+        const button = document.createElement('button');
+        button.textContent = player.name;
+        button.onclick = () => socket.emit('vote', player.id);
+        voteList.appendChild(button);
     });
 });
 
-function vote(votedPlayerId) {
-    socket.emit('vote', votedPlayerId);
-}
+// Display result
+socket.on('result', (data) => {
+    if (data.eliminated) {
+        document.getElementById('gameStatus').textContent = `Player with ID ${data.eliminated} was eliminated!`;
+    } else {
+        document.getElementById('gameStatus').textContent = `No one was eliminated. Continue discussing.`;
+    }
+});

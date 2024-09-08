@@ -9,18 +9,22 @@
 <body>
     <div class="container">
         <h1>Multiplayer Imposter Game</h1>
-        <div id="gameArea">
+        <div id="playerForm">
             <input type="text" id="playerName" placeholder="Enter your name">
             <button id="addPlayerButton">Add Player</button>
-            <button id="startGameButton">Start Game</button>
-            <div id="playerList"></div>
-            <div id="gameStatus"></div>
-            <div id="voteSection" style="display:none;">
-                <h2>Vote for the player to eliminate:</h2>
-                <div id="voteList"></div>
-            </div>
+        </div>
+        <button id="startGameButton">Start Game</button>
+        <div id="playerList">
+            <h2>Players:</h2>
+            <div id="playerListContainer"></div>
+        </div>
+        <div id="gameStatus"></div>
+        <div id="voteSection" style="display:none;">
+            <h2>Vote for a player:</h2>
+            <div id="voteList"></div>
         </div>
     </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="game.js"></script>
 </body>

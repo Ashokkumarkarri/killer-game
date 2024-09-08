@@ -8,54 +8,52 @@ const io = socketIo(server);
 
 app.use(express.static('public'));
 
-const players = [];
+let players = [];
 let gameStarted = false;
-let imposter = null;
-let votes = {};
+let imposterId = null;
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
-  
-  // Handle new player joining
-  socket.on('addPlayer', (playerName) => {
-    if (players.length < 10 && !gameStarted) {
-      players.push({ name: playerName, id: socket.id });
-      io.emit('playerList', players);
-      console.log(`${playerName} added`);
-    }
-  });
+    console.log('A user connected:', socket.id);
 
-  // Handle game start
-  socket.on('startGame', () => {
-    if (players.length > 1) {
-      gameStarted = true;
-      const randomIndex = Math.floor(Math.random() * players.length);
-      imposter = players[randomIndex].id;
-      io.emit('gameStarted', imposter);
-    }
-  });
+    // Add a new player
+    socket.on('addPlayer', (playerName) => {
+        if (!gameStarted) {
+            const player = { id: socket.id, name: playerName };
+            players.push(player);
+            io.emit('playerList', players);
+        }
+    });
 
-  // Handle vote
-  socket.on('vote', (votedPlayerId) => {
-    if (!votes[votedPlayerId]) {
-      votes[votedPlayerId] = 0;
-    }
-    votes[votedPlayerId]++;
-    io.emit('vote', votes);
-  });
+    // Start the game
+    socket.on('startGame', () => {
+        if (!gameStarted && players.length > 1) {
+            gameStarted = true;
+            // Randomly select an imposter
+            imposterId = players[Math.floor(Math.random() * players.length)].id;
+            io.emit('gameStarted', imposterId);
+            io.emit('updateVotes', players);
+        }
+    });
 
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-    const index = players.findIndex(player => player.id === socket.id);
-    if (index !== -1) {
-      players.splice(index, 1);
-      io.emit('playerList', players);
-    }
-  });
+    // Handle voting
+    socket.on('vote', (votedPlayerId) => {
+        if (gameStarted) {
+            const votedPlayer = players.find(player => player.id === votedPlayerId);
+            if (votedPlayer) {
+                io.emit('result', { eliminated: votedPlayerId });
+            }
+        }
+    });
+
+    // Handle player disconnection
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+        players = players.filter(player => player.id !== socket.id);
+        io.emit('playerList', players);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
